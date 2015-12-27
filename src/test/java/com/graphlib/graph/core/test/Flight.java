@@ -1,8 +1,8 @@
 package com.graphlib.graph.core.test;
 
-import com.graphlib.graph.core.DirectedEdge;
+import com.graphlib.graph.core.Edge;
 
-public class Flight implements DirectedEdge<City, Flight> {
+public class Flight implements Edge<City, Flight> {
 
 	City from;
 	
@@ -14,23 +14,21 @@ public class Flight implements DirectedEdge<City, Flight> {
 		this.from = from;
 		this.to = to;
 		this.number = number;
-		this.from.getOutgoingEdges().add(this);
-		this.to.getIncomingEdges().add(this);
 	}
 	
-	public City getOriginVertex() {
+	public City getSourceVertex() {
 		return from; 
 	}
 
-	public City getDestinationVertex() {
+	public City getTargetVertex() {
 		return to;
 	}
 
-	public void setOriginVertex(City v) {
+	public void setSourceVertex(City v) {
 		this.from = v;
 	}
 
-	public void setDestinationVertex(City v) {
+	public void setTargetVertex(City v) {
 		this.to = v;
 	}
 	
@@ -48,10 +46,10 @@ public class Flight implements DirectedEdge<City, Flight> {
 		
 		Flight other = (Flight)o;
 		
-		if(!from.equals(other.getOriginVertex()))
+		if(!from.equals(other.getSourceVertex()))
 			return false;
 		
-		if(!to.equals(other.getDestinationVertex()))
+		if(!to.equals(other.getTargetVertex()))
 			return false;
 		
 		if(!number.equals(other.number))

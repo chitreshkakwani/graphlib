@@ -1,14 +1,22 @@
 package com.graphlib.graph.core;
 
-public interface Edge<V extends Vertex<V, E>, E extends Edge<V, E>> {
-
-	public void setOriginVertex(V v);
+/**
+ * Interface for a directed edge in a {@link Graph}.
+ * 
+ * @author Chitresh Kakwani
+ *
+ * @param <V>
+ * @param <E>
+ */
+public interface Edge<V, E extends Edge<V, E>> {
 	
-	public V getOriginVertex();
+	public V getSourceVertex();
 	
-	public void setDestinationVertex(V v);
+	public void setSourceVertex(V source);
 	
-	public V getDestinationVertex();
+	public V getTargetVertex();
+	
+	public void setTargetVertex(V target);
 	
 	public int hashCode();
 	

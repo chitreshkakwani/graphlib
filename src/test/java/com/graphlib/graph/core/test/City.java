@@ -1,22 +1,11 @@
 package com.graphlib.graph.core.test;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import com.graphlib.graph.core.Vertex;
-
-public class City implements Vertex<City, Flight> {
+public class City {
 
 	String name;
 	
-	Set<Flight> outgoingFlights;
-	
-	Set<Flight> incomingFlights;
-	
 	public City(String name){
 		this.name = name;
-		outgoingFlights = new HashSet<Flight>();
-		incomingFlights = new HashSet<Flight>();
 	}
 	
 	public City(City c) {
@@ -25,14 +14,6 @@ public class City implements Vertex<City, Flight> {
 
 	public String getName() {
 		return name;
-	}
-	
-	public Set<Flight> getOutgoingEdges() {
-		return outgoingFlights;
-	}
-
-	public Set<Flight> getIncomingEdges() {
-		return incomingFlights;
 	}
 	
 	@Override

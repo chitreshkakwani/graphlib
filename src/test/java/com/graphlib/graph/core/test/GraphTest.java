@@ -33,9 +33,7 @@ public class GraphTest {
 		graph.addEdge(jaipurToBangalore);
 		graph.addEdge(mumbaiToChennai);
 
-		TopologicalSort<City, Flight> sorter = new TopologicalSort<City, Flight>();
-
-		List<City> sorted = sorter.apply(graph);
+		List<City> sorted = TopologicalSort.apply(graph);
 
 		assert (sorted.indexOf(delhi) < sorted.indexOf(bangalore));
 		assert (sorted.indexOf(jaipur) < sorted.indexOf(bangalore));

@@ -4,22 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import com.graphlib.graph.core.DirectedGraph;
-import com.graphlib.graph.core.DirectedEdge;
-import com.graphlib.graph.core.Vertex;
+import com.graphlib.graph.core.Edge;
+import com.graphlib.graph.core.Graph;
 
-public class TopologicalSort<V extends Vertex<V, E>, E extends DirectedEdge<V, E>> {
+public class TopologicalSort {
 
-	public List<V> apply(DirectedGraph<V, E> graph) {
+	public static <V, E extends Edge<V, E>> List<V> apply(final Graph<V, E> graph) {
 
 		if (graph.hasCycles())
-			throw new UnsupportedOperationException(
-					"Topological sort not supported on graphs with cycles");
+			throw new UnsupportedOperationException("Topological sort not supported on graphs with cycles");
 
 		List<V> sortedVertices = new ArrayList<V>();
 
 		Stack<V> stack = new Stack<V>();
-		for (V v : graph.getVertices()) {
+		for (V v : graph.getAllVertices()) {
 			if (sortedVertices.contains(v))
 				continue;
 
@@ -32,18 +30,18 @@ public class TopologicalSort<V extends Vertex<V, E>, E extends DirectedEdge<V, E
 					continue;
 				}
 
-				if (vertex.getIncomingEdges().isEmpty()) {
+				if (graph.getIncomingEdgesFor(vertex).isEmpty()) {
 					sortedVertices.add(vertex);
 					continue;
 				}
 
 				boolean flag = true;
 
-				for (E e : vertex.getIncomingEdges()) {
-					if (sortedVertices.contains(e.getOriginVertex()))
+				for (E e : graph.getIncomingEdgesFor(vertex)) {
+					if (sortedVertices.contains(e.getSourceVertex()))
 						continue;
 					else {
-						stack.push(e.getOriginVertex());
+						stack.push(e.getSourceVertex());
 						flag = false;
 					}
 				}
@@ -55,6 +53,9 @@ public class TopologicalSort<V extends Vertex<V, E>, E extends DirectedEdge<V, E
 			}
 		}
 		return sortedVertices;
+	}
+
+	private TopologicalSort() {
 	}
 
 }
