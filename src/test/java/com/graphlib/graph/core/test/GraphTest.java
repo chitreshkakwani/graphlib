@@ -35,9 +35,9 @@ public class GraphTest {
 
 		List<City> sorted = TopologicalSort.apply(graph);
 
-		assert (sorted.indexOf(delhi) < sorted.indexOf(bangalore));
-		assert (sorted.indexOf(jaipur) < sorted.indexOf(bangalore));
-		assert (sorted.indexOf(mumbai) < sorted.indexOf(chennai));
+		assertTrue (sorted.indexOf(delhi) < sorted.indexOf(bangalore));
+		assertTrue (sorted.indexOf(jaipur) < sorted.indexOf(bangalore));
+		assertTrue (sorted.indexOf(mumbai) < sorted.indexOf(chennai));
 
 	}
 

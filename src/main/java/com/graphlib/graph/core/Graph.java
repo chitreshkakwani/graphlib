@@ -238,5 +238,12 @@ public interface Graph<V, E extends Edge<V, E>> {
 	 * @return true if there is a cycle present in the graph, false otherwise
 	 */
 	public boolean hasCycles();
+	
+	/**
+	 * Checks if the graph is connected or not.
+	 * 
+	 * @return true if the graph is connected, false otherwise
+	 */
+	public boolean isConnected();
 
 }

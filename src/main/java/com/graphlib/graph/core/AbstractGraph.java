@@ -61,7 +61,7 @@ public abstract class AbstractGraph<V, E extends Edge<V, E>> implements Graph<V,
 		return result;
 	}
 
-	public final boolean addEdge(final E edge) {
+	public boolean addEdge(final E edge) {
 		boolean result = false;
 
 		/*
@@ -98,7 +98,7 @@ public abstract class AbstractGraph<V, E extends Edge<V, E>> implements Graph<V,
 		return edgeFactory;
 	}
 
-	public final void setEdgeFactory(final EdgeFactory<V, E> edgeFactory) {
+	public void setEdgeFactory(final EdgeFactory<V, E> edgeFactory) {
 		this.edgeFactory = edgeFactory;
 	}
 
@@ -202,5 +202,31 @@ public abstract class AbstractGraph<V, E extends Edge<V, E>> implements Graph<V,
 	public boolean hasCycles() {
 		CycleDetectionAlgorithm<V, E> algo = new CycleDetectionAlgorithm<>();
 		return algo.isCyclic(this);
+	}
+	
+	public boolean isConnected() {
+		if (this.getAllVertices().isEmpty()) {
+			return true;
+		}
+
+		Set<V> visited = new HashSet<>();
+
+		findReachableVertices(visited, this.getAllVertices().iterator().next());
+
+		return !(visited.size() != this.getAllVertices().size());
+	}
+	
+	private void findReachableVertices(Set<V> visited, V v) {
+		if (visited.contains(v))
+			return;
+
+		visited.add(v);
+		for (E in : this.getIncomingEdgesFor(v)) {
+			findReachableVertices(visited, in.getSourceVertex());
+		}
+		for (E out : this.getOutgoingEdgesFor(v)) {
+			findReachableVertices(visited, out.getTargetVertex());
+		}
+
 	}
 }
