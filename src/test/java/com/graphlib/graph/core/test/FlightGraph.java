@@ -1,8 +1,6 @@
 package com.graphlib.graph.core.test;
 
 import java.util.HashSet;
-import java.util.Set;
-
 import com.graphlib.graph.core.AbstractGraph;
 
 public class FlightGraph extends AbstractGraph<City, Flight> {

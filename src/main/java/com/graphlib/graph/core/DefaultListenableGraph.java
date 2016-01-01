@@ -29,6 +29,9 @@ public class DefaultListenableGraph<V, E extends Edge<V, E>> extends AbstractGra
 		}
 
 		this.baseGraph = g;
+		this.vertices = new HashSet<>();
+		this.edges = new HashSet<>();
+		this.setEdgeFactory(g.getEdgeFactory());
 		this.reuseEvents = reuseEvents;
 		this.reusableVertexEvent = new FlyWeightVertexEvent<>(this, -1, null);
 		this.reusableEdgeEvent = new FlyWeightEdgeEvent<>(this, -1, null, null, null);
@@ -75,6 +78,16 @@ public class DefaultListenableGraph<V, E extends Edge<V, E>> extends AbstractGra
 		return removed;
 	}
 
+	@Override
+	public boolean contains(final E edge) {
+		return baseGraph.contains(edge);
+	}
+
+	@Override
+	public boolean contains(final V vertex) {
+		return baseGraph.contains(vertex);
+	}
+	
 	@Override
 	public void addListener(GraphListener<V, E> listener) {
 		this.listeners.add(listener);
