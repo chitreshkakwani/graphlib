@@ -6,10 +6,8 @@ import java.util.Set;
 import com.graphlib.graph.event.GraphEdgeChangeEvent;
 import com.graphlib.graph.event.GraphVertexChangeEvent;
 
-public class DefaultListenableGraph<V, E extends Edge<V, E>> extends AbstractGraph<V, E>
+public class DefaultListenableGraph<V, E extends Edge<V, E>> extends GraphDelegator<V, E>
 		implements ListenableGraph<V, E> {
-
-	protected Graph<V, E> baseGraph;
 
 	protected Set<GraphListener<V, E>> listeners = new HashSet<>();
 
@@ -24,11 +22,11 @@ public class DefaultListenableGraph<V, E extends Edge<V, E>> extends AbstractGra
 	}
 
 	public DefaultListenableGraph(Graph<V, E> g, boolean reuseEvents) {
+		super(g);
 		if (g instanceof ListenableGraph) {
 			throw new IllegalArgumentException("Base graph cannot be a listenable graph.");
 		}
 
-		this.baseGraph = g;
 		this.vertices = new HashSet<>();
 		this.edges = new HashSet<>();
 		this.setEdgeFactory(g.getEdgeFactory());
@@ -39,7 +37,7 @@ public class DefaultListenableGraph<V, E extends Edge<V, E>> extends AbstractGra
 
 	@Override
 	public boolean addVertex(V v) {
-		boolean added = baseGraph.addVertex(v);
+		boolean added = super.addVertex(v);
 		if (added) {
 			fireVertexAddedEvent(v);
 		}
@@ -49,9 +47,9 @@ public class DefaultListenableGraph<V, E extends Edge<V, E>> extends AbstractGra
 
 	@Override
 	public boolean removeVertex(V v) {
-		if(baseGraph.contains(v)) {
-			this.removeAllEdges(baseGraph.getAllEdges(v));
-			baseGraph.removeVertex(v);
+		if(super.contains(v)) {
+			this.removeAllEdges(super.getAllEdges(v));
+			super.removeVertex(v);
 			fireVertexRemovedEvent(v);
 			return true;
 		}
@@ -61,7 +59,7 @@ public class DefaultListenableGraph<V, E extends Edge<V, E>> extends AbstractGra
 
 	@Override
 	public boolean addEdge(E edge) {
-		boolean added = baseGraph.addEdge(edge);
+		boolean added = super.addEdge(edge);
 		if (added) {
 			fireEdgeAddedEvent(edge, edge.getSourceVertex(), edge.getTargetVertex());
 		}
@@ -70,7 +68,7 @@ public class DefaultListenableGraph<V, E extends Edge<V, E>> extends AbstractGra
 
 	@Override
 	public boolean removeEdge(final E edge) {
-		boolean removed = baseGraph.removeEdge(edge);
+		boolean removed = super.removeEdge(edge);
 		if (removed) {
 			fireEdgeRemovedEvent(edge, edge.getSourceVertex(), edge.getTargetVertex());
 		}
@@ -80,12 +78,12 @@ public class DefaultListenableGraph<V, E extends Edge<V, E>> extends AbstractGra
 
 	@Override
 	public boolean contains(final E edge) {
-		return baseGraph.contains(edge);
+		return super.contains(edge);
 	}
 
 	@Override
 	public boolean contains(final V vertex) {
-		return baseGraph.contains(vertex);
+		return super.contains(vertex);
 	}
 	
 	@Override

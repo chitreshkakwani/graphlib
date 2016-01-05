@@ -33,6 +33,10 @@ public class Subgraph<V, E extends Edge<V, E>, G extends ListenableGraph<V, E>> 
 			}
 		}
 	}
+	
+	public G getContainingGraph() {
+		return baseGraph;
+	}
 
 	@Override
 	public boolean addVertex(final V vertex) {
