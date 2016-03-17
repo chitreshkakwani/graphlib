@@ -1,7 +1,7 @@
 #Graphlib
-A library for graph data structures, directed and undirected, and common graph algorithms.
+A library for directed graph data structures and algorithms, inspired by JGraphT in part.
 
-##Algorithms covered:
+##Algorithms:
 * Topological sort
 
 ##Build

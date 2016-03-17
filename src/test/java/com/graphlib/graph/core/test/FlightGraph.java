@@ -8,6 +8,7 @@ public class FlightGraph extends AbstractGraph<City, Flight> {
 	public FlightGraph() {
 		vertices = new HashSet<City>();
 		edges = new HashSet<Flight>();
+		edgeFactory = new FlightFactory();
 	}
 	
 	public FlightGraph(FlightGraph graph) {

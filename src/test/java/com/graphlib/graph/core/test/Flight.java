@@ -1,8 +1,9 @@
 package com.graphlib.graph.core.test;
 
 import com.graphlib.graph.core.Edge;
+import com.graphlib.graph.core.WeightedEdge;
 
-public class Flight implements Edge<City, Flight> {
+public class Flight implements WeightedEdge<City, Flight> {
 
 	City from;
 	
@@ -10,10 +11,17 @@ public class Flight implements Edge<City, Flight> {
 	
 	String number;
 	
+	int cost;
+	
 	public Flight(City from, City to, String number){
+		this(from, to, number, 1);
+	}
+	
+	public Flight(City from, City to, String number, int cost){
 		this.from = from;
 		this.to = to;
 		this.number = number;
+		this.cost = cost;
 	}
 	
 	public City getSourceVertex() {
@@ -60,6 +68,16 @@ public class Flight implements Edge<City, Flight> {
 	
 	public String toString(){
 		return number;
+	}
+
+	@Override
+	public int getEdgeWeight() {
+		return cost;
+	}
+
+	@Override
+	public void setEdgeWeight(int weight) {
+		this.cost = weight;
 	}
 
 }
