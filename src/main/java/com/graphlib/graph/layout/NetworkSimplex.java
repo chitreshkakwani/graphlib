@@ -43,7 +43,7 @@ public final class NetworkSimplex {
 		LayoutEdge e, f;
 		int iterations = 0;
 		while ((e = leaveEdge()) != null) {
-			f = enterEgde(e);
+			f = enterEdge(e);
 			exchange(e, f);
 			if (++iterations >= maxIterations) {
 				break;
@@ -63,8 +63,20 @@ public final class NetworkSimplex {
 	}
 
 	private void leftRightBalance() {
-		// TODO Auto-generated method stub
-
+		for(LayoutEdge e : tree.getAllEdges()) {
+			if(e.getCutValue() == 0) {
+				LayoutEdge f = enterEdge(e);
+				if(f == null) {
+					continue;
+				}
+				
+				int delta = f.getSlack();
+				if(delta <= 1) {
+					continue;
+				}
+				
+			}
+		}
 	}
 
 	private void topBottomBalance() {
@@ -150,7 +162,7 @@ public final class NetworkSimplex {
 		}
 	}
 
-	private LayoutEdge enterEgde(LayoutEdge e) {
+	private LayoutEdge enterEdge(LayoutEdge e) {
 		tree.removeEdge(e);
 		ConnectivityAnalyzer<LayoutNode, LayoutEdge> ca = new ConnectivityAnalyzer<>(tree);
 		Set<Set<LayoutNode>> components = ca.getComponents();

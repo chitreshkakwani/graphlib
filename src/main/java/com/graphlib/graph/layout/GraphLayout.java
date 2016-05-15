@@ -5,15 +5,18 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.graphlib.graph.core.AbstractGraph;
 
-
 public class GraphLayout extends AbstractGraph<LayoutNode, LayoutEdge> {
+
+	/*
+	 * Indicates if the edges have labels.
+	 */
+	boolean hasLabels = false;
 	
 	public GraphLayout() {
 		super();
@@ -21,26 +24,34 @@ public class GraphLayout extends AbstractGraph<LayoutNode, LayoutEdge> {
 		edges = new HashSet<LayoutEdge>();
 		edgeFactory = new LayoutEdgeFactory();
 	}
-	
+
+	public boolean isHasLabels() {
+		return hasLabels;
+	}
+
+	public void setHasLabels(boolean hasLabels) {
+		this.hasLabels = hasLabels;
+	}
+
 	public Map<LayoutNode, Integer> getVertexRankMap() {
 		Map<LayoutNode, Integer> rankMap = new HashMap<>();
-		for(LayoutNode n : getAllVertices()) {
+		for (LayoutNode n : getAllVertices()) {
 			rankMap.put(n, n.getRank());
 		}
 		return rankMap;
 	}
-	
+
 	public int getMaxRank() {
 		int maxRank = GraphLayoutParameters.MIN_RANK;
-		for(LayoutNode n : getAllVertices()) {
-			if(maxRank < n.getRank()) {
+		for (LayoutNode n : getAllVertices()) {
+			if (maxRank < n.getRank()) {
 				maxRank = n.getRank();
 			}
 		}
-		
+
 		return maxRank;
 	}
-	
+
 	/**
 	 * Returns the order of vertices for the given rank.
 	 * 
@@ -49,65 +60,65 @@ public class GraphLayout extends AbstractGraph<LayoutNode, LayoutEdge> {
 	 */
 	public List<LayoutNode> getRankOrder(int rank) {
 		List<LayoutNode> order = new ArrayList<>();
-		for(LayoutNode v : getAllVertices()) {
-			if(v.getRank() == rank) {
+		for (LayoutNode v : getAllVertices()) {
+			if (v.getRank() == rank) {
 				order.add(v);
 			}
 		}
-		
+
 		Collections.sort(order, new Comparator<LayoutNode>() {
 
 			@Override
 			public int compare(LayoutNode o1, LayoutNode o2) {
 				return Integer.compare(o1.getOrder(), o2.getOrder());
 			}
-			
+
 		});
-		
+
 		return order;
 	}
-	
+
 	public void setRankOrder(int rank, List<LayoutNode> order) {
 		List<LayoutNode> oldRankOrder = getRankOrder(rank);
-		for(LayoutNode n : oldRankOrder) {
+		for (LayoutNode n : oldRankOrder) {
 			n.setOrder(order.indexOf(n));
 		}
 	}
-	
+
 	public Map<Integer, List<LayoutNode>> getOrder() {
 		Map<Integer, List<LayoutNode>> rankOrderMap = new HashMap<>();
-		for(int i = GraphLayoutParameters.MIN_RANK; i <= getMaxRank(); i++) {
+		for (int i = GraphLayoutParameters.MIN_RANK; i <= getMaxRank(); i++) {
 			rankOrderMap.put(i, getRankOrder(i));
 		}
-		
+
 		return rankOrderMap;
 	}
-	
+
 	public void setOrder(Map<Integer, List<LayoutNode>> rankOrderMap) {
-		for(Integer rank : rankOrderMap.keySet()) {
+		for (Integer rank : rankOrderMap.keySet()) {
 			setRankOrder(rank, rankOrderMap.get(rank));
 		}
 	}
-	
-	public void rank(){
+
+	public void rank() {
 		NetworkSimplex ns = new NetworkSimplex(this);
 		ns.iterate(5, NetworkSimplex.BalancingMode.TOP_BOTTOM);
 	}
-	
+
 	public void order() {
 		VertexOrderingHeuristic orderingHeuristic = new VertexOrderingHeuristic(this);
 		orderingHeuristic.orderVertices();
 	}
-	
+
 	public void positionVertices() {
 		VertexPositionComputer positionComputer = new VertexPositionComputer(this);
 		positionComputer.assignPosition();
 	}
-	
+
 	public void drawEdges() {
-		
+
 	}
-	
+
 	/**
 	 * Returns the number of edge crossings in the given vertex order.
 	 * 
@@ -122,7 +133,7 @@ public class GraphLayout extends AbstractGraph<LayoutNode, LayoutEdge> {
 		}
 		return crossings;
 	}
-	
+
 	public int getAdjacentRankCrossings(int rank) {
 		/*
 		 * The rank must have at least one adjacent rank.
@@ -134,16 +145,16 @@ public class GraphLayout extends AbstractGraph<LayoutNode, LayoutEdge> {
 
 		int crossings = 0;
 
-		if(rank > GraphLayoutParameters.MIN_RANK) {
+		if (rank > GraphLayoutParameters.MIN_RANK) {
 			crossings += getAdjacentRankCrossings(rank - 1, rank);
 		}
-		
-		if(rank < maxRank) {
+
+		if (rank < maxRank) {
 			crossings += getAdjacentRankCrossings(rank, rank + 1);
 		}
 		return crossings;
 	}
-	
+
 	public int getAdjacentRankCrossings(int lowerRank, int higherRank) {
 		final List<LayoutNode> lowerRankOrder = getRankOrder(lowerRank);
 		final List<LayoutNode> higherRankOrder = getRankOrder(higherRank);
@@ -178,7 +189,7 @@ public class GraphLayout extends AbstractGraph<LayoutNode, LayoutEdge> {
 				}
 
 			});
-			
+
 			for (LayoutNode higherRankVertex : higherRankVertices) {
 				if (higherRankOrder.contains(higherRankVertex)) {
 					higherRankIndex = higherRankOrder.indexOf(higherRankVertex);

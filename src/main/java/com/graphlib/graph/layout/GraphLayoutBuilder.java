@@ -34,6 +34,7 @@ public class GraphLayoutBuilder<V, E extends Edge<V, E>> {
 			} else {
 				edge.setLabel(e.toString());
 				edge.setMinLength(edge.getMinLength() * 2);
+				graphLayout.setHasLabels(true);
 			}
 			edge.setLabel(e.toString());
 			graphLayout.addEdge(edge);

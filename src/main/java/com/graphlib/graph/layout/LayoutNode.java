@@ -18,6 +18,8 @@ public class LayoutNode {
 	
 	boolean isLabel;
 	
+	boolean isSlackNode;
+	
 	double height;
 	
 	double leftWidth;
@@ -67,6 +69,14 @@ public class LayoutNode {
 
 	public void setLabel(boolean isLabel) {
 		this.isLabel = isLabel;
+	}
+
+	public boolean isSlackNode() {
+		return isSlackNode;
+	}
+
+	public void setSlackNode(boolean isSlackNode) {
+		this.isSlackNode = isSlackNode;
 	}
 
 	public int getId() {
