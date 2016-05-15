@@ -1,9 +1,5 @@
 package com.graphlib.graph.layout;
 
-import java.awt.Font;
-import java.awt.font.FontRenderContext;
-import java.awt.geom.AffineTransform;
-
 import org.apache.log4j.Logger;
 
 public class VertexPositionComputer {
