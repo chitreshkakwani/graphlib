@@ -1,4 +1,4 @@
-package com.graphlib.graph.core.test;
+package com.graphlib.graph.layout;
 
 import java.util.HashMap;
 

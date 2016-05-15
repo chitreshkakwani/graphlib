@@ -1,33 +1,24 @@
 package com.graphlib.graph.layout.test;
 
+import static org.junit.Assert.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.Test;
 
-import com.graphlib.graph.core.VertexFactory;
 import com.graphlib.graph.core.test.City;
 import com.graphlib.graph.core.test.Flight;
 import com.graphlib.graph.core.test.FlightGraph;
 import com.graphlib.graph.layout.GraphLayout;
-import com.graphlib.graph.layout.GraphLayoutBuilder;
+import com.graphlib.graph.layout.LayoutEdge;
+import com.graphlib.graph.layout.LayoutNode;
 
-public class RankAssignmentTest {
-	
-	enum CityFactory implements VertexFactory<City, Flight> {
-		
-		INSTANCE;
+public class VertexOrderTest {
 
-		String prefix = "City_";
-		
-		Integer counter = 1;
-		
-		@Override
-		public City createVertex() {
-			return new City(prefix + counter++);
-		}
-		
-	}
-	
 	@Test
-	public void testNetworkSimplex() {
+	public void testVertexOrder() {
 		FlightGraph graph = new FlightGraph();
 		City delhi = new City("Delhi");
 		City bangalore = new City("Bangalore");
@@ -65,11 +56,30 @@ public class RankAssignmentTest {
 		graph.addEdge(goaToMum);
 		graph.addEdge(jaiToKol);
 		
-		GraphLayoutBuilder<City, Flight> layoutBuilder = new GraphLayoutBuilder<>(graph);
-		GraphLayout layout = layoutBuilder.build();
+		GraphLayout layout = new GraphLayout();
 		
-		//assertTrue(rankComputer.getVertexRank(delhi) == 0);
-		//assertTrue(rankComputer.getVertexRank(bangalore) == 1);
+		int i = 1;
+		Map<City, LayoutNode> vertexLayoutNodeMap = new HashMap<>();
+		for(City v : graph.getAllVertices()) {
+			LayoutNode node = new LayoutNode(i++, v.toString());
+			layout.addVertex(node);
+			vertexLayoutNodeMap.put(v, node);
+		}
+		
+		for(Flight e : graph.getAllEdges()) {
+			LayoutNode source = vertexLayoutNodeMap.get(e.getSourceVertex());
+			LayoutNode target = vertexLayoutNodeMap.get(e.getTargetVertex());
+			LayoutEdge edge = new LayoutEdge(i++, source, target);
+			edge.setLabel(e.toString());
+			layout.addEdge(edge);
+		}
+		
+		layout.rank();
+		
+		layout.order();
+		
+		Map<Integer, List<LayoutNode>> order = layout.getOrder();
+		assertTrue(order.get(1).get(2).getLabel().equalsIgnoreCase("Goa"));
+		assertTrue(order.get(1).get(3).getLabel().equalsIgnoreCase("Cochin"));
 	}
-
 }
