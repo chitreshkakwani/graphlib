@@ -94,7 +94,7 @@ public class LayoutEdge implements WeightedEdge<LayoutNode, LayoutEdge> {
 	}
 
 	public int getLength() {
-		return Math.abs(target.getRank() - source.getRank());
+		return source.getRank() - target.getRank();
 	}
 	
 	public int getSlack() {

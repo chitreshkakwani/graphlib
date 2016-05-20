@@ -1,16 +1,12 @@
 package com.graphlib.graph.layout;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import com.graphlib.graph.algorithms.ConnectivityAnalyzer;
-import com.graphlib.graph.algorithms.TopologicalSort;
 import com.graphlib.graph.core.DefaultListenableGraph;
 import com.graphlib.graph.core.ListenableGraph;
 import com.graphlib.graph.core.Subgraph;
@@ -52,6 +48,9 @@ public final class NetworkSimplex {
 
 		normalize();
 		balance(bmode);
+		for(LayoutNode v : graph.getAllVertices()) {
+			LOGGER.debug("Final rank assignment for " + v.toString() + " : " + v.getRank());
+		}
 	}
 
 	private void balance(BalancingMode bmode) {
@@ -63,18 +62,18 @@ public final class NetworkSimplex {
 	}
 
 	private void leftRightBalance() {
-		for(LayoutEdge e : tree.getAllEdges()) {
-			if(e.getCutValue() == 0) {
+		for (LayoutEdge e : tree.getAllEdges()) {
+			if (e.getCutValue() == 0) {
 				LayoutEdge f = enterEdge(e);
-				if(f == null) {
+				if (f == null) {
 					continue;
 				}
-				
+
 				int delta = f.getSlack();
-				if(delta <= 1) {
+				if (delta <= 1) {
 					continue;
 				}
-				
+
 			}
 		}
 	}
@@ -133,75 +132,167 @@ public final class NetworkSimplex {
 	}
 
 	private void exchange(LayoutEdge e, LayoutEdge f) {
-		if (!tree.removeEdge(e)) {
-			throw new IllegalArgumentException("Leaving edge doesn't exist in the feasible tree.");
-		}
-		tree.addEdge(f);
-
-		/*
-		 * Re-rank nodes based on the new feasible tree.
-		 */
-		List<LayoutNode> nodes = TopologicalSort.apply(tree);
-
-		for (LayoutNode n : nodes) {
-			int maxRank = n.getRank();
-			for (LayoutEdge inEdge : tree.getIncomingEdgesFor(n)) {
-				if (inEdge.getSourceVertex().getRank() + inEdge.getMinLength() > maxRank) {
-					maxRank = inEdge.getSourceVertex().getRank() + inEdge.getMinLength();
+		int delta = f.getSlack();
+		
+		if(delta > 0) {
+			int s = tree.getOutDegreeFor(e.getTargetVertex()) + tree.getInDegreeFor(e.getTargetVertex());
+			if(s == 1) {
+				updateRank(e.getTargetVertex(), delta);
+			} else {
+				s = tree.getOutDegreeFor(e.getSourceVertex()) + tree.getInDegreeFor(e.getSourceVertex());
+				if(s == 1) {
+					updateRank(e.getSourceVertex(), -delta);
+				} else {
+					if(e.getTargetVertex().getLim() < e.getSourceVertex().getLim()) {
+						updateRank(e.getTargetVertex(), delta);
+					} else {
+						updateRank(e.getSourceVertex(), -delta);
+					}
 				}
 			}
-			n.setRank(maxRank);
 		}
+		
+		int cutValue = e.getCutValue();
+		LayoutNode lca = updateTree(f.getTargetVertex(), f.getSourceVertex(), cutValue, true);
+		if(updateTree(f.getSourceVertex(), f.getTargetVertex(), cutValue, false) != lca) {
+			throw new IllegalStateException("Lowest common ancestors of the nodes [" + f.getTargetVertex() 
+			+ ", " + f.getSourceVertex() + "] don't match.");
+		}
+		f.setCutValue(f.getCutValue() - cutValue);
+		e.setCutValue(0);
+		tree.removeEdge(e);
+		tree.addEdge(f);
+		postOrderTraversal(lca, lca.getParent(), lca.getLow());
+	}
+	
+	private boolean isSequence(int a, int b, int c) {
+		return ((a <= b) && (b <= c));
+	}
+	
+	private LayoutNode updateTree(LayoutNode v, LayoutNode w, int cutValue, boolean direction) {
+		LayoutEdge e;
+		boolean d;
+		while(!isSequence(v.getLow(), w.getLim(), v.getLim())) {
+			e = v.getParent();
+			if(v == e.getTargetVertex()) {
+				d = direction;
+			} else {
+				d = !direction;
+			}
+			
+			if(d) {
+				e.setCutValue(e.getCutValue() + cutValue);
+			} else {
+				e.setCutValue(e.getCutValue() - cutValue);
+			}
+			
+			if(e.getTargetVertex().getLim() > e.getSourceVertex().getLim()) {
+				v = e.getTargetVertex();
+			} else {
+				v = e.getSourceVertex();
+			}
+		}
+		
+		return v;
+	}
 
-		/*
-		 * TODO: This is an expensive operation. A more efficient method is
-		 * available to recompute cut values.
-		 */
-		for (LayoutEdge edge : tree.getAllEdges()) {
-			edge.setCutValue(findCutValue(tree, edge));
+	private void updateRank(LayoutNode node, int delta) {
+		node.setRank(node.getRank() - delta);
+		for(LayoutEdge e : tree.getIncomingEdgesFor(node)) {
+			if(e != node.getParent()) {
+				updateRank(e.getSourceVertex(), delta);
+			}
+		}
+		for(LayoutEdge e : tree.getOutgoingEdgesFor(node)) {
+			if(e != node.getParent()) {
+				updateRank(e.getTargetVertex(), delta);
+			}
 		}
 	}
 
+	/**
+	 * Finds a non-tree edge to replace the given edge. The edge that is found has minimum slack and
+	 * connects the components formed by removing the given edge.
+	 * @param e
+	 * @return
+	 */
 	private LayoutEdge enterEdge(LayoutEdge e) {
-		tree.removeEdge(e);
-		ConnectivityAnalyzer<LayoutNode, LayoutEdge> ca = new ConnectivityAnalyzer<>(tree);
-		Set<Set<LayoutNode>> components = ca.getComponents();
-		if (components.size() != 2) {
-			throw new IllegalArgumentException("Subgraph is not a tree.");
+		/*
+		 * Obtain the edge end-point that is lower down in the tree based on the
+		 * post order traversal number. Find an edge to/from tail component that
+		 * crosses over to the head component and has the minimum slack.
+		 */
+		if (e.getTargetVertex().getLim() < e.getSourceVertex().getLim()) {
+			return dfsOutgoingEdges(e.getTargetVertex(), e.getTargetVertex().getLow(), e.getTargetVertex().getLim(),
+					null);
+		} else {
+			return dfsIncomingEdges(e.getSourceVertex(), e.getSourceVertex().getLow(), e.getSourceVertex().getLim(),
+					null);
 		}
+	}
 
-		Iterator<Set<LayoutNode>> it = components.iterator();
-		Set<LayoutNode> head = it.next();
-		Set<LayoutNode> tail = it.next();
-
-		if (head.contains(e.getSourceVertex())) {
-			Set<LayoutNode> temp = head;
-			head = tail;
-			tail = temp;
-		}
-
-		// TODO: This takes O(VE) time. A more efficient method is available.
-
-		int minSlack = 0;
-		LayoutEdge minSlackEdge = null;
-		for (LayoutEdge edge : tree.getContainingGraph().getAllEdges()) {
-			if (edge == e) {
-				continue;
-			}
-			/*
-			 * Consider edges going from the head component to the tail
-			 * component.
-			 */
-			if (tail.contains(edge.getTargetVertex()) && head.contains(edge.getSourceVertex())) {
-				if (minSlack == 0
-						|| Math.abs(edge.getSourceVertex().getRank() - edge.getTargetVertex().getRank()) < minSlack) {
-					minSlack = Math.abs(edge.getSourceVertex().getRank() - edge.getTargetVertex().getRank());
-					minSlackEdge = edge;
+	private LayoutEdge dfsIncomingEdges(LayoutNode node, int low, int lim, LayoutEdge minSlackEdge) {
+		for (LayoutEdge e : graph.getIncomingEdgesFor(node)) {
+			if (!tree.contains(e)) {
+				if (!((low <= e.getSourceVertex().getLim()) && (e.getSourceVertex().getLim() <= lim))) {
+					/*
+					 * If the source vertex is not in the given component, then
+					 * this edge connects the two components.
+					 */
+					if (minSlackEdge == null || e.getSlack() < minSlackEdge.getSlack()) {
+						minSlackEdge = e;
+					}
 				}
+			} else if (e.getSourceVertex().getLim() < node.getLim()) {
+				/*
+				 * If it is a tree edge and the other end-point is lower down in
+				 * the tree, look at its incoming edges.
+				 */
+				minSlackEdge = dfsIncomingEdges(e.getSourceVertex(), low, lim, minSlackEdge);
 			}
 		}
 
-		tree.addEdge(e);
+		for (LayoutEdge e : tree.getOutgoingEdgesFor(node)) {
+			if (minSlackEdge != null && minSlackEdge.getSlack() <= 0) {
+				break;
+			}
+			if (e.getTargetVertex().getLim() < node.getLim()) {
+				minSlackEdge = dfsIncomingEdges(e.getTargetVertex(), low, lim, minSlackEdge);
+			}
+		}
+
+		return minSlackEdge;
+	}
+
+	private LayoutEdge dfsOutgoingEdges(LayoutNode node, int low, int lim, LayoutEdge minSlackEdge) {
+		for (LayoutEdge e : graph.getOutgoingEdgesFor(node)) {
+			if (!tree.contains(e)) {
+				if (!((low <= e.getTargetVertex().getLim()) && (e.getTargetVertex().getLim() <= lim))) {
+					/*
+					 * If the source vertex is not in the given component, then
+					 * this edge connects the two components.
+					 */
+					if (minSlackEdge == null || e.getSlack() < minSlackEdge.getSlack()) {
+						minSlackEdge = e;
+					}
+				}
+			} else if (e.getTargetVertex().getLim() < node.getLim()) {
+				/*
+				 * If it is a tree edge and the other end-point is lower down in
+				 * the tree, look at its incoming edges.
+				 */
+				minSlackEdge = dfsOutgoingEdges(e.getTargetVertex(), low, lim, minSlackEdge);
+			}
+		}
+
+		for (LayoutEdge e : tree.getIncomingEdgesFor(node)) {
+			if (minSlackEdge != null && minSlackEdge.getSlack() <= 0) {
+				break;
+			}
+			if (e.getSourceVertex().getLim() < node.getLim()) {
+				minSlackEdge = dfsOutgoingEdges(e.getSourceVertex(), low, lim, minSlackEdge);
+			}
+		}
 
 		return minSlackEdge;
 	}
@@ -209,8 +300,10 @@ public final class NetworkSimplex {
 	private LayoutEdge leaveEdge() {
 		for (LayoutEdge e : tree.getAllEdges()) {
 			/*
-			 * FIXME: Use search size to search more edges instead
-			 * of returning the first edge with cut value lower than 0.
+			 * FIXME: Use search size to search more edges instead of returning
+			 * the first edge with cut value lower than 0. Also search
+			 * cyclically through the edges instead of starting from the
+			 * beginning to save some iterations.
 			 */
 			if (e.getCutValue() < 0) {
 				return e;
@@ -223,7 +316,7 @@ public final class NetworkSimplex {
 	public void feasibleTree() {
 		// Assign initial ranks
 		initRank();
-		
+
 		ListenableGraph<LayoutNode, LayoutEdge> listenableGraph = new DefaultListenableGraph<>(graph);
 
 		/*
@@ -232,10 +325,10 @@ public final class NetworkSimplex {
 		while ((tree = tightTree(listenableGraph)).getAllVertices().size() < graph.getAllVertices().size()) {
 			LayoutEdge minSlackEdge = getMinSlackEdge(tree);
 			int delta = minSlackEdge.getSlack();
-			if(tree.contains(minSlackEdge.getTargetVertex())) {
+			if (tree.contains(minSlackEdge.getTargetVertex())) {
 				delta = -delta;
 			}
-			
+
 			for (LayoutNode v : tree.getAllVertices()) {
 				v.setRank(v.getRank() + delta);
 			}
@@ -243,10 +336,127 @@ public final class NetworkSimplex {
 
 		LOGGER.info("Tight tree obtained : " + tree.getAllEdges());
 
-		for (LayoutEdge e : tree.getAllEdges()) {
-			e.setCutValue(findCutValue(tree, e));
-			LOGGER.info("Cut value for edge " + e + " : " + e.getCutValue());
+		initCutValues();
+	}
+
+	private void initCutValues() {
+		LayoutNode root = tree.getAllVertices().iterator().next();
+		postOrderTraversal(root, null, 1);
+		dfsCutValue(root, null);
+	}
+
+	private void dfsCutValue(LayoutNode node, LayoutEdge parent) {
+		for (LayoutEdge e : tree.getIncomingEdgesFor(node)) {
+			if (e != parent) {
+				dfsCutValue(e.getSourceVertex(), e);
+			}
 		}
+		for (LayoutEdge e : tree.getOutgoingEdgesFor(node)) {
+			if (e != parent) {
+				dfsCutValue(e.getTargetVertex(), e);
+			}
+		}
+		if (parent != null) {
+			cutValueLocal(parent);
+		}
+	}
+
+	/**
+	 * Sets the cut value of the given tree edge computed using information
+	 * local to the edge as opposed to iterating over the entire graph to
+	 * identify edges crossing over from the tail component to the head
+	 * component. It is assumed that the cut values of edges on one side are
+	 * already set.
+	 * 
+	 * @param treeEdge
+	 *            Tree edge for which cut value is to be computed.
+	 */
+	private void cutValueLocal(LayoutEdge treeEdge) {
+		LayoutNode v = null;
+		int direction;
+		if (treeEdge.getTargetVertex().getParent() == treeEdge) {
+			v = treeEdge.getTargetVertex();
+			direction = 1;
+		} else {
+			v = treeEdge.getSourceVertex();
+			direction = -1;
+		}
+
+		int sum = 0;
+		for (LayoutEdge e : graph.getIncomingEdgesFor(v)) {
+			sum += cutValueLocal(e, v, direction);
+		}
+		for (LayoutEdge e : graph.getOutgoingEdgesFor(v)) {
+			sum += cutValueLocal(e, v, direction);
+		}
+		treeEdge.setCutValue(sum);
+		LOGGER.info("Cut value for edge " + treeEdge + " : " + treeEdge.getCutValue());
+	}
+
+	private int cutValueLocal(LayoutEdge e, LayoutNode v, int direction) {
+		LayoutNode other;
+		if (e.getSourceVertex() == v) {
+			other = e.getTargetVertex();
+		} else {
+			other = e.getSourceVertex();
+		}
+		int d, rv, f;
+		if (!((v.getLow() <= other.getLim()) && (other.getLim() <= v.getLim()))) {
+			f = 1;
+			rv = e.getEdgeWeight();
+		} else {
+			f = 0;
+			if (tree.contains(e)) {
+				rv = e.getCutValue();
+			} else {
+				rv = 0;
+			}
+			rv -= e.getEdgeWeight();
+		}
+
+		if (direction > 0) {
+			if (e.getSourceVertex() == v) {
+				d = 1;
+			} else {
+				d = -1;
+			}
+		} else {
+			if (e.getTargetVertex() == v) {
+				d = 1;
+			} else {
+				d = -1;
+			}
+		}
+
+		if (f != 0) {
+			d = -d;
+		}
+		if (d < 0) {
+			rv = -rv;
+		}
+		return rv;
+	}
+
+	private int postOrderTraversal(LayoutNode node, LayoutEdge parent, int low) {
+		int lim = low;
+		/*
+		 * Parent would be null for the root node.
+		 */
+		node.setParent(parent);
+		node.setLow(low);
+		for (LayoutEdge e : tree.getOutgoingEdgesFor(node)) {
+			if (e != parent) {
+				lim = postOrderTraversal(e.getTargetVertex(), e, lim);
+			}
+		}
+
+		for (LayoutEdge e : tree.getIncomingEdgesFor(node)) {
+			if (e != parent) {
+				lim = postOrderTraversal(e.getSourceVertex(), e, lim);
+			}
+		}
+		node.setLim(lim);
+		return lim + 1;
 	}
 
 	private void normalize() {
@@ -267,51 +477,6 @@ public final class NetworkSimplex {
 		for (LayoutNode v : graph.getAllVertices()) {
 			v.setRank(v.getRank() + shift);
 		}
-	}
-
-	private int findCutValue(Subgraph<LayoutNode, LayoutEdge, ListenableGraph<LayoutNode, LayoutEdge>> tree,
-			LayoutEdge e) {
-		if (!tree.removeEdge(e)) {
-			throw new IllegalArgumentException("Specified edge doesn't exist in the feasible tree.");
-		}
-
-		ConnectivityAnalyzer<LayoutNode, LayoutEdge> ca = new ConnectivityAnalyzer<>(tree);
-		Set<Set<LayoutNode>> components = ca.getComponents();
-		if (components.size() != 2) {
-			throw new IllegalArgumentException("Subgraph is not a tree.");
-		}
-
-		Iterator<Set<LayoutNode>> it = components.iterator();
-		Set<LayoutNode> head = it.next();
-		Set<LayoutNode> tail = it.next();
-
-		if (head.contains(e.getSourceVertex())) {
-			Set<LayoutNode> temp = head;
-			head = tail;
-			tail = temp;
-		}
-
-		// TODO: This takes O(VE) time. A more efficient method is available.
-
-		/* Find all edges that have endpoints in both components */
-		int cutValue = e.getEdgeWeight();
-		for (LayoutEdge edge : tree.getContainingGraph().getAllEdges()) {
-			if (edge == e) {
-				/*
-				 * Edge weight has already been added to cut value.
-				 */
-				continue;
-			}
-			if (head.contains(edge.getTargetVertex()) && tail.contains(edge.getSourceVertex())) {
-				cutValue += edge.getEdgeWeight();
-			} else if (tail.contains(edge.getTargetVertex()) && head.contains(edge.getSourceVertex())) {
-				cutValue -= edge.getEdgeWeight();
-			}
-		}
-		
-		tree.addEdge(e);
-
-		return cutValue;
 	}
 
 	/**
@@ -364,7 +529,7 @@ public final class NetworkSimplex {
 		while (!poset.isEmpty()) {
 			LayoutNode v = poset.poll();
 			v.setRank(0);
-			
+
 			for (LayoutEdge e : graph.getOutgoingEdgesFor(v)) {
 				v.setRank(Math.max(v.getRank(), e.getTargetVertex().getRank() + e.getMinLength()));
 			}
@@ -404,8 +569,7 @@ public final class NetworkSimplex {
 				continue;
 			}
 
-			if (Math.abs(e.getSourceVertex().getRank()
-					- e.getTargetVertex().getRank()) == e.getMinLength()) {
+			if (Math.abs(e.getSourceVertex().getRank() - e.getTargetVertex().getRank()) == e.getMinLength()) {
 				/*
 				 * Edge is tight. Should be added to the tree. Find out which of
 				 * the two endpoints of the edge is not already in the tree and

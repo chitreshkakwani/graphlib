@@ -25,6 +25,22 @@ public class LayoutNode {
 	double leftWidth;
 	
 	double rightWidth;
+
+	/*
+	 * Post-order traversal number.
+	 */
+	int lim;
+	
+	/*
+	 * Lowest post-order traversal number of any descendant.
+	 */
+	int low;
+	
+	/*
+	 * Edge that lead to the discovery of this node in post-order traversal on
+	 * the feasible tree selected by the network simplex algorithm.
+	 */
+	LayoutEdge parent;
 	
 	public LayoutNode(int id, String label) {
 		this.id = id;
@@ -121,6 +137,30 @@ public class LayoutNode {
 
 	public void setRightWidth(double rightWidth) {
 		this.rightWidth = rightWidth;
+	}
+
+	public int getLim() {
+		return lim;
+	}
+
+	public void setLim(int lim) {
+		this.lim = lim;
+	}
+
+	public int getLow() {
+		return low;
+	}
+
+	public void setLow(int low) {
+		this.low = low;
+	}
+
+	public LayoutEdge getParent() {
+		return parent;
+	}
+
+	public void setParent(LayoutEdge parent) {
+		this.parent = parent;
 	}
 
 	@Override

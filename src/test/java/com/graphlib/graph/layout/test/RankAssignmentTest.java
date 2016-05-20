@@ -71,5 +71,52 @@ public class RankAssignmentTest {
 		//assertTrue(rankComputer.getVertexRank(delhi) == 0);
 		//assertTrue(rankComputer.getVertexRank(bangalore) == 1);
 	}
+	
+	@Test
+	public void testNetworkSimplexMultipleIterations() {
+		FlightGraph graph = new FlightGraph();
+		City a = new City("a");
+		City b = new City("b");
+		City c = new City("c");
+		City d = new City("d");
+		City e = new City("e");
+		City f = new City("f");
+		City g = new City("g");
+		City h = new City("h");
+
+		graph.addVertex(a);
+		graph.addVertex(b);
+		graph.addVertex(c);
+		graph.addVertex(d);
+		graph.addVertex(e);
+		graph.addVertex(f);
+		graph.addVertex(g);
+
+		Flight ab = new Flight(a, b, "ab");
+		Flight af = new Flight(a, f, "af");
+		Flight ae = new Flight(a, e, "ae");
+		Flight bc = new Flight(b, c, "bc");
+		Flight cd = new Flight(c, d, "cd");
+		Flight eg = new Flight(e, g, "eg");
+		Flight fg = new Flight(f, g, "fg");
+		Flight dh = new Flight(d, h, "dh");
+		Flight gh = new Flight(g, h, "gh");
+
+		graph.addEdge(ab);
+		graph.addEdge(af);
+		graph.addEdge(ae);
+		graph.addEdge(bc);
+		graph.addEdge(cd);
+		graph.addEdge(eg);
+		graph.addEdge(fg);
+		graph.addEdge(dh);
+		graph.addEdge(gh);
+		
+		GraphLayoutBuilder<City, Flight> layoutBuilder = new GraphLayoutBuilder<>(graph);
+		GraphLayout layout = layoutBuilder.build();
+		
+		//assertTrue(rankComputer.getVertexRank(delhi) == 0);
+		//assertTrue(rankComputer.getVertexRank(bangalore) == 1);
+	}
 
 }
