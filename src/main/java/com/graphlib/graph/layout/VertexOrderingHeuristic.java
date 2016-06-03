@@ -277,12 +277,12 @@ public class VertexOrderingHeuristic {
 						virtualNode = vertexFactory.createVertex();
 						virtualNode.setLeftWidth(GraphLayoutParameters.NODE_SEPARATION);
 						//FIXME: Set right width and height based on edge label dimensions.
-						virtualNode.setRightWidth(50);
-						virtualNode.setHeight(15);
+						virtualNode.setRightWidth(graph.getRenderingContext().getTextWidth(e.getLabel()));
+						virtualNode.setHeight(graph.getRenderingContext().getTextHeight(e.getLabel()));
 						virtualNode.setRank(rank);
 						virtualNode.setVirtual(true);
 						virtualNode.setLabel(true);
-						virtualNode.setLabel(e.getLabel());
+						virtualNode.setLabel("l_" + e.getLabel());
 						graph.addVertex(virtualNode);
 						if(!this.edgeVirtualVerticesMap.containsKey(e)) {
 							this.edgeVirtualVerticesMap.put(e, new HashSet<LayoutNode>()); 
@@ -298,6 +298,7 @@ public class VertexOrderingHeuristic {
 						virtualNode.setHeight(1);
 						virtualNode.setRank(rank);
 						virtualNode.setVirtual(true);
+						virtualNode.setLabel("v_" + e.getLabel() + "_" + rank);
 						graph.addVertex(virtualNode);
 						if(!this.edgeVirtualVerticesMap.containsKey(e)) {
 							this.edgeVirtualVerticesMap.put(e, new HashSet<LayoutNode>()); 

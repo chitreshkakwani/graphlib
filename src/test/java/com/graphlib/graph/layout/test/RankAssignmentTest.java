@@ -1,5 +1,10 @@
 package com.graphlib.graph.layout.test;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.Test;
 
 import com.graphlib.graph.core.VertexFactory;
@@ -8,6 +13,8 @@ import com.graphlib.graph.core.test.Flight;
 import com.graphlib.graph.core.test.FlightGraph;
 import com.graphlib.graph.layout.GraphLayout;
 import com.graphlib.graph.layout.GraphLayoutBuilder;
+import com.graphlib.graph.layout.LayoutNode;
+import com.graphlib.graph.layout.RenderingContext;
 
 public class RankAssignmentTest {
 	
@@ -101,6 +108,17 @@ public class RankAssignmentTest {
 		Flight fg = new Flight(f, g, "fg");
 		Flight dh = new Flight(d, h, "dh");
 		Flight gh = new Flight(g, h, "gh");
+		
+		final Map<String, Double> edgeTextWidths = new HashMap<>();
+		edgeTextWidths.put("ab", 21.0);
+		edgeTextWidths.put("af", 19.0);
+		edgeTextWidths.put("ae", 20.0);
+		edgeTextWidths.put("bc", 21.0);
+		edgeTextWidths.put("cd", 21.0);
+		edgeTextWidths.put("eg", 21.0);
+		edgeTextWidths.put("fg", 19.0);
+		edgeTextWidths.put("dh", 22.0);
+		edgeTextWidths.put("gh", 22.0);		
 
 		graph.addEdge(ab);
 		graph.addEdge(af);
@@ -113,8 +131,30 @@ public class RankAssignmentTest {
 		graph.addEdge(gh);
 		
 		GraphLayoutBuilder<City, Flight> layoutBuilder = new GraphLayoutBuilder<>(graph);
-		GraphLayout layout = layoutBuilder.build();
+		layoutBuilder.renderingContext(new RenderingContext() {
+
+			@Override
+			public double getTextHeight(String text) {
+				return 15.0;
+			}
+
+			@Override
+			public double getTextWidth(String text) {
+				if(edgeTextWidths.containsKey(text)) {
+					return edgeTextWidths.get(text);
+				}
+				
+				throw new IllegalArgumentException("Text not found: " + text);
+			}
 		
+		});
+		GraphLayout layout = layoutBuilder.build();
+		Map<Integer, List<LayoutNode>> order = layout.getOrder();
+		for(Integer r : order.keySet()) {
+			Collections.reverse(order.get(r));
+		}
+		layout.setOrder(order);
+		layout.positionVertices();
 		//assertTrue(rankComputer.getVertexRank(delhi) == 0);
 		//assertTrue(rankComputer.getVertexRank(bangalore) == 1);
 	}

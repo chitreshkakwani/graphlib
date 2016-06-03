@@ -31,11 +31,29 @@ public final class NetworkSimplex {
 	}
 
 	public void iterate(int maxIterations, BalancingMode bmode) {
+		if (bmode == BalancingMode.LEFT_RIGHT) {
+			LOGGER.debug("------------X co-ordinate assignment before NS------------");
+			for (LayoutNode v : graph.getAllVertices()) {
+				LOGGER.debug("x-coordinate assignment for " + v.toString() + " : [" + v.getRank() + "]");
+			}
+		}
+		
+		if (bmode == BalancingMode.TOP_BOTTOM) {
+			// Assign initial ranks
+			initRank();
+		}
+		
 		/*
 		 * Find an initial feasible tree.
 		 */
 		feasibleTree();
 
+		if (bmode == BalancingMode.LEFT_RIGHT) {
+			LOGGER.debug("------------ Initial X co-ordinate assignment------------");
+			for (LayoutNode v : graph.getAllVertices()) {
+				LOGGER.debug("x-coordinate assignment for " + v.toString() + " : [" + v.getRank() + "]");
+			}
+		}
 		LayoutEdge e, f;
 		int iterations = 0;
 		while ((e = leaveEdge()) != null) {
@@ -46,11 +64,14 @@ public final class NetworkSimplex {
 			}
 		}
 
+		if (bmode == BalancingMode.LEFT_RIGHT) {
+			LOGGER.debug("------------X co-ordinate assignment before balancing------------");
+			for (LayoutNode v : graph.getAllVertices()) {
+				LOGGER.debug("x-coordinate assignment for " + v.toString() + " : [" + v.getRank() + "]");
+			}
+		}
 		normalize();
 		balance(bmode);
-		for(LayoutNode v : graph.getAllVertices()) {
-			LOGGER.debug("Final rank assignment for " + v.toString() + " : " + v.getRank());
-		}
 	}
 
 	private void balance(BalancingMode bmode) {
@@ -72,6 +93,11 @@ public final class NetworkSimplex {
 				int delta = f.getSlack();
 				if (delta <= 1) {
 					continue;
+				}
+				if (e.getTargetVertex().getLim() < e.getSourceVertex().getLim()) {
+					updateRank(e.getTargetVertex(), delta / 2);
+				} else {
+					updateRank(e.getSourceVertex(), -delta / 2);
 				}
 
 			}
@@ -314,15 +340,17 @@ public final class NetworkSimplex {
 	}
 
 	public void feasibleTree() {
-		// Assign initial ranks
-		initRank();
 
 		ListenableGraph<LayoutNode, LayoutEdge> listenableGraph = new DefaultListenableGraph<>(graph);
 
+		int iterations = 0;
 		/*
 		 * Iterate till a tight tree covering all vertices is obtained.
 		 */
 		while ((tree = tightTree(listenableGraph)).getAllVertices().size() < graph.getAllVertices().size()) {
+			if(iterations++ > 50) {
+				throw new IllegalStateException("Failed to obtain tight tree.");
+			}
 			LayoutEdge minSlackEdge = getMinSlackEdge(tree);
 			int delta = minSlackEdge.getSlack();
 			if (tree.contains(minSlackEdge.getTargetVertex())) {
@@ -569,7 +597,7 @@ public final class NetworkSimplex {
 				continue;
 			}
 
-			if (Math.abs(e.getSourceVertex().getRank() - e.getTargetVertex().getRank()) == e.getMinLength()) {
+			if (e.getSlack() == 0) {
 				/*
 				 * Edge is tight. Should be added to the tree. Find out which of
 				 * the two endpoints of the edge is not already in the tree and
@@ -578,13 +606,13 @@ public final class NetworkSimplex {
 				 */
 				if (!tightTree.contains(e.getSourceVertex())) {
 					for (LayoutEdge edge : graph.getAllEdges(e.getSourceVertex())) {
-						if (!explored.contains(edge)) {
+						if (!explored.contains(edge) && !unexplored.contains(edge)) {
 							unexplored.add(edge);
 						}
 					}
 				} else if (!tightTree.contains(e.getTargetVertex())) {
 					for (LayoutEdge edge : graph.getAllEdges(e.getTargetVertex())) {
-						if (!explored.contains(edge)) {
+						if (!explored.contains(edge) && !unexplored.contains(edge)) {
 							unexplored.add(edge);
 						}
 					}

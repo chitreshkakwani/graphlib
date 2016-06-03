@@ -31,18 +31,21 @@ public class VertexPositionComputer {
 	}
 
 	public void assignPosition() {
+		for (LayoutNode n : graph.getAllVertices()) {
+			LOGGER.debug("Width of node " + n + " : [" + n.getLeftWidth() + ", " + n.getRightWidth() + "]");
+		}
 		Map<Integer, List<LayoutNode>> vertexOrder = graph.getOrder();
 		assignYCoordinates();
 		createAuxiliaryNodesAndEdges();
 		NetworkSimplex ns = new NetworkSimplex(graph);
-		ns.iterate(5, NetworkSimplex.BalancingMode.LEFT_RIGHT);
+		ns.iterate(100, NetworkSimplex.BalancingMode.LEFT_RIGHT);
 
 		for (int i : vertexOrder.keySet()) {
 			for (int j = 0; j < vertexOrder.get(i).size(); j++) {
 				LayoutNode n = vertexOrder.get(i).get(j);
 				n.setxCoordinate(n.getRank());
 				n.setRank(i);
-				LOGGER.debug("Co-ordinate assignment for rank " + i + ", position " + j + " : [" + n.getxCoordinate()
+				LOGGER.debug("Co-ordinate assignment for " + n + " : [" + n.getxCoordinate()
 						+ ", " + n.getyCoordinate() + "]");
 			}
 		}
@@ -129,7 +132,7 @@ public class VertexPositionComputer {
 		 */
 		Map<Integer, List<LayoutNode>> vertexOrder = graph.getOrder();
 
-		for (int i = 0; i < maxRank; i++) {
+		for (int i = 0; i <= maxRank; i++) {
 			List<LayoutNode> rankNodes = vertexOrder.get(i);
 			double last = 0;
 			rankNodes.get(0).setRank((int) last);
@@ -138,14 +141,17 @@ public class VertexPositionComputer {
 			for (int j = 0; j < rankNodes.size(); j++) {
 				LayoutNode node = rankNodes.get(j);
 				// FIXME: Store right width for later use.
-				//double rw = node.getRightWidth();
+				// double rw = node.getRightWidth();
 				// TODO: Include self-edges in the computation of node size.
 				if (j + 1 < rankNodes.size()) {
 					LayoutNode rightNeighbor = rankNodes.get(j + 1);
-					double width = node.getLeftWidth() + node.getRightWidth() + nodeSep;
-					LayoutEdge auxEdge = makeAuxiliaryEdge(node, rightNeighbor, width, 0);
+					double width = node.getRightWidth() + rightNeighbor.getLeftWidth() + nodeSep;
+					LayoutEdge auxEdge = makeAuxiliaryEdge(rightNeighbor, node, width, 0);
 					graph.addEdge(auxEdge);
 					last = last + width;
+					rightNeighbor.setRank((int) last);
+					LOGGER.debug(
+							"Initial x co-ordinate assignment for " + rightNeighbor + " : " + rightNeighbor.getRank());
 				}
 			}
 		}
@@ -170,11 +176,11 @@ public class VertexPositionComputer {
 				m1 = -m0;
 				m0 = 0;
 			}
-			LayoutEdge auxEdge1 = makeAuxiliaryEdge(virtualNode, e.getSourceVertex(), m0 + 1, e.getEdgeWeight());
-			LayoutEdge auxEdge2 = makeAuxiliaryEdge(virtualNode, e.getTargetVertex(), m1 + 1, e.getEdgeWeight());
+			LayoutEdge auxEdge1 = makeAuxiliaryEdge(e.getSourceVertex(), virtualNode, m0 + 1, e.getEdgeWeight());
+			LayoutEdge auxEdge2 = makeAuxiliaryEdge(e.getTargetVertex(), virtualNode, m1 + 1, e.getEdgeWeight());
 			virtualNode
 					.setRank(Math.min(e.getSourceVertex().getRank() - m0 - 1, e.getTargetVertex().getRank() - m1 - 1));
-			virtualNode.setLabel("slack (" + virtualNode.getRank() + ")");
+			virtualNode.setLabel("s_" + e.getSourceVertex() + "_" + e.getTargetVertex());
 			graph.addVertex(virtualNode);
 			graph.addEdge(auxEdge1);
 			graph.addEdge(auxEdge2);

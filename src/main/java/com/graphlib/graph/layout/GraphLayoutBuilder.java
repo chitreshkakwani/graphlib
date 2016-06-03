@@ -12,6 +12,8 @@ public class GraphLayoutBuilder<V, E extends Edge<V, E>> {
 	
 	GraphLayout graphLayout;
 	
+	RenderingContext rc;
+	
 	public GraphLayoutBuilder(Graph<V, E> graph) {
 		this.graph = graph;
 		this.graphLayout = new GraphLayout();
@@ -21,6 +23,8 @@ public class GraphLayoutBuilder<V, E extends Edge<V, E>> {
 		for(V v : graph.getAllVertices()) {
 			LayoutNode node = new LayoutNode(i++, v.toString());
 			node.setHeight(GraphLayoutParameters.DEFAULT_HEIGHT);
+			node.setLeftWidth(27);
+			node.setRightWidth(27);
 			graphLayout.addVertex(node);
 			vertexLayoutNodeMap.put(v, node);
 		}
@@ -41,11 +45,17 @@ public class GraphLayoutBuilder<V, E extends Edge<V, E>> {
 		}
 	}	
 	
+	public GraphLayoutBuilder<V, E> renderingContext(RenderingContext rc) {
+		this.rc = rc;
+		this.graphLayout.setRenderingContext(rc);
+		return this;
+	}
+	
 	public GraphLayout build() {
 		graphLayout.rank();
 		graphLayout.order();
-		graphLayout.positionVertices();
-		graphLayout.drawEdges();
+		//graphLayout.positionVertices();
+		//graphLayout.drawEdges();
 		return graphLayout;
 	}
 }

@@ -145,7 +145,11 @@ public class LayoutEdge implements WeightedEdge<LayoutNode, LayoutEdge> {
 
 	@Override
 	public String toString() {
-		return label;
+		if(label != null && !label.trim().isEmpty()) {
+			return label;
+		} else {
+			return source + " -> " + target;
+		}
 	}
 
 }

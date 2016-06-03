@@ -13,6 +13,8 @@ import com.graphlib.graph.core.AbstractGraph;
 
 public class GraphLayout extends AbstractGraph<LayoutNode, LayoutEdge> {
 
+	private RenderingContext rc;
+	
 	/*
 	 * Indicates if the edges have labels.
 	 */
@@ -25,6 +27,14 @@ public class GraphLayout extends AbstractGraph<LayoutNode, LayoutEdge> {
 		edgeFactory = new LayoutEdgeFactory();
 	}
 
+	public RenderingContext getRenderingContext() {
+		return rc;
+	}
+	
+	public void setRenderingContext(RenderingContext rc) {
+		this.rc = rc;
+	}
+	
 	public boolean isHasLabels() {
 		return hasLabels;
 	}
