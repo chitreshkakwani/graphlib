@@ -135,4 +135,23 @@ public final class Polygon {
 
 		return triangles;
 	}
+	
+	public DualGraph getDualGraph() {
+		DualGraph dg = new DualGraph();
+		List<Triangle> triangles = triangulate();
+		for(Triangle t : triangles) {
+			dg.addVertex(t);
+			for(Triangle t1 : triangles) {
+				if(!t1.equals(t)) {
+					dg.addVertex(t1);
+					Point[] sharedEdge = t.getSharedEdge(t1);
+					if(sharedEdge != null) {
+						dg.addEdge(new Diagonal(t, t1, sharedEdge[0], sharedEdge[1]));
+						dg.addEdge(new Diagonal(t1, t, sharedEdge[0], sharedEdge[1]));
+					}
+				}
+			}
+		}
+		return dg;
+	}
 }
