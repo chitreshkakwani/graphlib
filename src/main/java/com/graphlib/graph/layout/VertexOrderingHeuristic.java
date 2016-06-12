@@ -11,11 +11,12 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class VertexOrderingHeuristic {
 
-	private static final Logger LOGGER = Logger.getLogger(VertexOrderingHeuristic.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(VertexOrderingHeuristic.class);
 
 	private static final int MAX_ITERATIONS = 24;
 

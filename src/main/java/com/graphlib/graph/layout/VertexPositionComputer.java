@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class VertexPositionComputer {
 
-	private static final Logger LOGGER = Logger.getLogger(VertexPositionComputer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(VertexPositionComputer.class);
 
 	private final GraphLayout graph;
 

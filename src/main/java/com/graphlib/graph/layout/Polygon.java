@@ -3,6 +3,8 @@ package com.graphlib.graph.layout;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.graphlib.graph.layout.Spline.BezierCurve;
+
 /**
  * A polygon represents a closed two-dimensional region bounded by a set of line
  * segments. The endpoints of the line segments form the vertices of the
@@ -135,17 +137,17 @@ public final class Polygon {
 
 		return triangles;
 	}
-	
+
 	public DualGraph getDualGraph() {
 		DualGraph dg = new DualGraph();
 		List<Triangle> triangles = triangulate();
-		for(Triangle t : triangles) {
+		for (Triangle t : triangles) {
 			dg.addVertex(t);
-			for(Triangle t1 : triangles) {
-				if(!t1.equals(t)) {
+			for (Triangle t1 : triangles) {
+				if (!t1.equals(t)) {
 					dg.addVertex(t1);
 					Point[] sharedEdge = t.getSharedEdge(t1);
-					if(sharedEdge != null) {
+					if (sharedEdge != null) {
 						dg.addEdge(new Diagonal(t, t1, sharedEdge[0], sharedEdge[1]));
 						dg.addEdge(new Diagonal(t1, t, sharedEdge[0], sharedEdge[1]));
 					}
@@ -153,5 +155,52 @@ public final class Polygon {
 			}
 		}
 		return dg;
+	}
+
+	/**
+	 * Checks if the given Bezier curve lies inside the polygon or not assuming the
+	 * first and last control points of the curve are inside the polygon.
+	 * 
+	 * @param curve Bezier curve to test for containment
+	 * @return true if the curve is inside the polygon, false otherwise
+	 */
+	public boolean containsCurve(BezierCurve curve) {
+		Point[] line = new Point[2];
+		for (int i = 0; i < points.size(); i++) {
+			line[0] = points.get(i);
+			line[1] = points.get((i + 1) % points.size());
+
+			List<Double> roots = curve.getLineIntersectionRoots(line[0], line[1]);
+			if (roots == null) {
+				continue;
+			}
+
+			for (int r = 0; r < roots.size(); r++) {
+				if (roots.get(r) < GraphLayoutParameters.DOUBLE_PRECISION
+						|| roots.get(r) > 1 - GraphLayoutParameters.DOUBLE_PRECISION) {
+					/*
+					 * Skip the roots that are approximately 0 or 1. They
+					 * correspond to (x,y) values on the curve near first and
+					 * last control points. Since the first and last control
+					 * points of the curve are known to be inside the polygon at
+					 * this point, the roots with values approximately 0 or 1
+					 * are going to be inside the polygon as well.
+					 */
+					continue;
+				}
+
+				Point intersectionPoint = curve.getCurvePoint(roots.get(r));
+				if (intersectionPoint.distanceSquared(line[0]) < Point.PRECISION
+						|| intersectionPoint.distanceSquared(line[1]) < Point.PRECISION) {
+					/*
+					 * If the intersection point lies approximately on the endpoints of the line
+					 * segment, i.e., corners of the polygon, it can be ignored.
+					 */
+					continue;
+				}
+				return false;
+			}
+		}
+		return true;
 	}
 }

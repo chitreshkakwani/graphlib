@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Funnel algorithm finds the shortest path between two points in a polygon that
@@ -18,7 +20,7 @@ import org.apache.log4j.Logger;
  */
 public class FunnelAlgorithm {
 
-	private static final Logger LOGGER = Logger.getLogger(FunnelAlgorithm.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(FunnelAlgorithm.class);
 
 	List<Point> funnelDeque = new ArrayList<>();
 

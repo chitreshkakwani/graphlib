@@ -7,16 +7,15 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.graphlib.graph.layout.FunnelAlgorithm;
 import com.graphlib.graph.layout.Point;
 import com.graphlib.graph.layout.Polygon;
 import com.graphlib.graph.layout.Spline;
 import com.graphlib.graph.layout.SplineRouter;
 
-public class FunnelAlgorithmTest {
+public class SplineRouterTest {
 
 	@Test
-	public void testStraightLinePath() {
+	public void testCurveFittingOnStraightLine() {
 		Polygon poly = new Polygon();
 		poly.addPoint(new Point(33, 192));
 		poly.addPoint(new Point(33, 174));
@@ -40,33 +39,17 @@ public class FunnelAlgorithmTest {
 		
 		Point source = new Point(69, 191);
 		Point dest = new Point(69, 106);
-		FunnelAlgorithm fa = new FunnelAlgorithm();
-		List<Point> path = fa.findPath(poly, source, dest);
-		assertTrue(path.size() == 2);
-		assertTrue(path.get(0).equals(dest));
-		assertTrue(path.get(1).equals(source));
+		List<Point> path = new ArrayList<>();
+		path.add(dest);
+		path.add(source);
+		
+		SplineRouter router = new SplineRouter();
+		Spline spline = router.fitCurve(poly, path);
+		assertTrue(spline != null);
 	}
 	
 	@Test
-	public void testSimplePath() {
-		Polygon poly = new Polygon();
-		poly.addPoint(new Point(10, 20));
-		poly.addPoint(new Point(0, 20));
-		poly.addPoint(new Point(0, 0));
-		poly.addPoint(new Point(20, 0));
-		poly.addPoint(new Point(20, 10));
-		poly.addPoint(new Point(10, 10)); 
-		
-		Point source = new Point(2, 18);
-		Point dest = new Point(18, 8);
-		
-		FunnelAlgorithm fa = new FunnelAlgorithm();
-		List<Point> path = fa.findPath(poly, source, dest);
-		assertTrue(path.size() == 3);
-	}
-	
-	@Test
-	public void testCurvedPath() {
+	public void testCurveFittingOnTwoLineSegmentsPath() {
 		Polygon poly = new Polygon();
 		poly.addPoint(new Point(-482, 105));
 		poly.addPoint(new Point(-482, 87));
@@ -90,8 +73,14 @@ public class FunnelAlgorithmTest {
 		Point source = new Point(-310, 104);
 		Point dest = new Point(-250, 19);
 		
-		FunnelAlgorithm fa = new FunnelAlgorithm();
-		List<Point> path = fa.findPath(poly, source, dest);
-		assertTrue(path.size() == 3);
+		List<Point> path = new ArrayList<>();
+		path.add(dest);
+		path.add(new Point(-300, 54));
+		path.add(source);
+		
+		SplineRouter router = new SplineRouter();
+		Spline spline = router.fitCurve(poly, path);
+		assertTrue(spline != null);
+		assertTrue(spline.getPoints().size() == 7);		
 	}
 }

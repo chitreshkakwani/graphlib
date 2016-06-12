@@ -5,7 +5,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.graphlib.graph.core.DefaultListenableGraph;
 import com.graphlib.graph.core.ListenableGraph;
@@ -20,7 +21,7 @@ public final class NetworkSimplex {
 		LEFT_RIGHT
 	}
 
-	private static final Logger LOGGER = Logger.getLogger(NetworkSimplex.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(NetworkSimplex.class);
 
 	private GraphLayout graph;
 

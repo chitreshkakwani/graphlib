@@ -1,5 +1,7 @@
 package com.graphlib.graph.layout;
 
+import java.util.List;
+
 /**
  * Represents a point in a two-dimensional space.
  * 
@@ -9,7 +11,7 @@ package com.graphlib.graph.layout;
 public final class Point {
 
 	public static final double PRECISION = 1E-3;
-	
+
 	/*
 	 * Orientation of a set of three or more points.
 	 */
@@ -59,6 +61,36 @@ public final class Point {
 		double d;
 		d = (p1.getY() - p2.getY()) * (p3.getX() - p2.getX()) - (p3.getY() - p2.getY()) * (p1.getX() - p2.getX());
 		return (d > 0) ? Orientation.COUNTER_CLOCKWISE : ((d < 0) ? Orientation.CLOCKWISE : Orientation.COLINEAR);
+	}
+
+	public static double distanceSum(List<Point> points) {
+		double sum = 0.0;
+		for (int i = 1; i < points.size(); i++) {
+			sum += points.get(i).distance(points.get(i - 1));
+		}
+		return sum;
+	}
+
+	/**
+	 * Returns the distance of this point from the given point.
+	 * 
+	 * @param p
+	 *            Point from which distance is to be computed
+	 * @return
+	 */
+	public double distance(Point p) {
+		return Math.sqrt(distanceSquared(p));
+	}
+
+	/**
+	 * Returns the squared distance of this point from the given point.
+	 * 
+	 * @param p
+	 *            Point from which distance is to be computed
+	 * @return
+	 */
+	public double distanceSquared(Point p) {
+		return ((x - p.getX()) * (x - p.getX())) + ((y - p.getY()) * (y - p.getY()));
 	}
 
 	/**
@@ -128,10 +160,12 @@ public final class Point {
 		if (getClass() != obj.getClass())
 			return false;
 		Point other = (Point) obj;
-		if (Double.doubleToLongBits(x) != Double.doubleToLongBits(other.x))
+		if (Math.abs(x - other.x) > PRECISION) {
 			return false;
-		if (Double.doubleToLongBits(y) != Double.doubleToLongBits(other.y))
+		}
+		if (Math.abs(y - other.y) > PRECISION) {
 			return false;
+		}
 		return true;
 	}
 

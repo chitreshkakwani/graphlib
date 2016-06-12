@@ -43,6 +43,25 @@ public class Spline {
 		}
 
 		/**
+		 * Returns the point on curve for the given parameter value.
+		 * 
+		 * @param t
+		 * @return
+		 */
+		public Point getCurvePoint(double t) {
+			double td = t*t*t;
+			double tc = 3*t*t*(1-t);
+			double tb = 3*t*(1-t)*(1-t);
+			double ta = (1-t)*(1-t)*(1-t);
+			double x = ta * controlPoints[0].getX() + tb * controlPoints[1].getX() +
+					tc * controlPoints[2].getX() + td * controlPoints[3].getX();
+			double y = ta * controlPoints[0].getY() + tb * controlPoints[1].getY() +
+					tc * controlPoints[2].getY() + td * controlPoints[3].getY();
+			
+			return new Point(x, y);
+		}
+		
+		/**
 		 * Returns the curve parameter values for the intersection points of the
 		 * curve with the line segment formed by the given points.
 		 * 
@@ -229,6 +248,11 @@ public class Spline {
 
 			return coeff;
 		}
+
+		@Override
+		public String toString() {
+			return Arrays.toString(controlPoints);
+		}
 	}
 
 	List<BezierCurve> curves = new ArrayList<>();
@@ -270,12 +294,41 @@ public class Spline {
 			 * Last control point from the previous curve must coincide with the
 			 * first control point of the curve being added (C0 continuity).
 			 */
-			if (prevCurveControlPoints.get(prevCurveControlPoints.size() - 1).equals(p0)) {
+			if (!prevCurveControlPoints.get(prevCurveControlPoints.size() - 1).equals(p0)) {
 				throw new IllegalArgumentException("First point of the curve doesn't coincide with the "
 						+ "last control point of the previous curve");
 			}
 		}
 
 		curves.add(new BezierCurve(p0, p1, p2, p3));
+	}
+	
+	public void addCurve(BezierCurve curve) {
+		addCurve(curve.getControlPoints().get(0), curve.getControlPoints().get(1),
+				curve.getControlPoints().get(2), curve.getControlPoints().get(3));
+	}
+	
+	public void addSpline(Spline spline) {
+		for(BezierCurve curve : spline.getBezierCurves()) {
+			addCurve(curve);
+		}
+	}
+
+	public List<Point> getPoints() {
+		List<Point> points = new ArrayList<>();
+		for(int i = 0; i < curves.size(); i++) {
+			if(i == 0) {
+				points.add(curves.get(i).getControlPoints().get(0));
+			}
+			points.add(curves.get(i).getControlPoints().get(1));
+			points.add(curves.get(i).getControlPoints().get(2));
+			points.add(curves.get(i).getControlPoints().get(3));
+		}
+		return points;
+	}
+	
+	@Override
+	public String toString() {
+		return curves.toString();
 	}
 }

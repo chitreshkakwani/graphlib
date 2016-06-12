@@ -9,5 +9,7 @@ public class GraphLayoutParameters {
 	public static final int DEFAULT_HEIGHT = 36;
 	
 	public static final int MIN_RANK = 0;
+	
+	public static final double DOUBLE_PRECISION = 1E-6;
 
 }
