@@ -6,14 +6,14 @@ import java.util.List;
 public class EquationSolver {
 
 	public EquationSolver() {
-		
+
 	}
-	
-	public static List<Double> solveLinear(double a, double b) {
+
+	public static List<Double> solveLinear(double a, double b) throws NegligibleCoefficientsException {
 		List<Double> roots = new ArrayList<>();
 		if (isApproximatelyZero(a)) {
 			if (isApproximatelyZero(b)) {
-				return null;
+				throw new NegligibleCoefficientsException();
 			} else
 				return roots;
 		}
@@ -21,8 +21,8 @@ public class EquationSolver {
 		roots.add(-b / a);
 		return roots;
 	}
-	
-	public static List<Double> solveQuadratic(double a, double b, double c) {
+
+	public static List<Double> solveQuadratic(double a, double b, double c) throws NegligibleCoefficientsException {
 		List<Double> roots = new ArrayList<>();
 
 		if (isApproximatelyZero(a)) {
@@ -45,8 +45,9 @@ public class EquationSolver {
 		}
 		return roots;
 	}
-	
-	public static List<Double> solveCubic(double a, double b, double c, double d) {
+
+	public static List<Double> solveCubic(double a, double b, double c, double d)
+			throws NegligibleCoefficientsException {
 		List<Double> roots = new ArrayList<>();
 
 		if (isApproximatelyZero(a)) {
@@ -88,12 +89,12 @@ public class EquationSolver {
 		}
 		return roots;
 	}
-	
+
 	private static boolean isApproximatelyZero(double value) {
 		if ((value < 1E-7) && (value > -1E-7)) {
 			return true;
 		}
-		
+
 		return false;
 	}
 }

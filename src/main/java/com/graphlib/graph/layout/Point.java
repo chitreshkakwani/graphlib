@@ -8,6 +8,8 @@ package com.graphlib.graph.layout;
  */
 public final class Point {
 
+	public static final double PRECISION = 1E-3;
+	
 	/*
 	 * Orientation of a set of three or more points.
 	 */
