@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.graphlib.graph.core.VertexFactory;
@@ -33,6 +34,7 @@ public class RankAssignmentTest {
 		
 	}
 	
+	@Ignore
 	@Test
 	public void testNetworkSimplex() {
 		FlightGraph graph = new FlightGraph();
@@ -79,6 +81,7 @@ public class RankAssignmentTest {
 		//assertTrue(rankComputer.getVertexRank(bangalore) == 1);
 	}
 	
+	@Ignore
 	@Test
 	public void testNetworkSimplexMultipleIterations() {
 		FlightGraph graph = new FlightGraph();

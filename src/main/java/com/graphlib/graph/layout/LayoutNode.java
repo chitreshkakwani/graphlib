@@ -118,6 +118,16 @@ public class LayoutNode {
 	public double getHeight() {
 		return height;
 	}
+	
+	public double getHeightAboveCenter() {
+		//TODO: Height above and below center may be different for different nodes.
+		return height/2;
+	}
+	
+	public double getHeightBelowCenter() {
+		//TODO: Height above and below center may be different for different nodes.
+		return height/2;
+	}
 
 	public void setHeight(double height) {
 		this.height = height;

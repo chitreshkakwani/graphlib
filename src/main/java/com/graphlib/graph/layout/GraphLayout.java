@@ -14,12 +14,12 @@ import com.graphlib.graph.core.AbstractGraph;
 public class GraphLayout extends AbstractGraph<LayoutNode, LayoutEdge> {
 
 	private RenderingContext rc;
-	
+
 	/*
 	 * Indicates if the edges have labels.
 	 */
 	boolean hasLabels = false;
-	
+
 	public GraphLayout() {
 		super();
 		vertices = new HashSet<LayoutNode>();
@@ -30,11 +30,11 @@ public class GraphLayout extends AbstractGraph<LayoutNode, LayoutEdge> {
 	public RenderingContext getRenderingContext() {
 		return rc;
 	}
-	
+
 	public void setRenderingContext(RenderingContext rc) {
 		this.rc = rc;
 	}
-	
+
 	public boolean isHasLabels() {
 		return hasLabels;
 	}
@@ -220,5 +220,49 @@ public class GraphLayout extends AbstractGraph<LayoutNode, LayoutEdge> {
 		}
 
 		return crossings;
+	}
+
+	public Box computeBoundingBox() {
+		double minLeftX = Integer.MAX_VALUE;
+		double maxRightX = Integer.MIN_VALUE;
+		double minLowerY = Integer.MAX_VALUE;
+		double maxUpperY = Integer.MIN_VALUE;
+		int maxRank = this.getMaxRank();
+
+		for (int i = 0; i <= maxRank; i++) {
+			List<LayoutNode> nodes = this.getRankOrder(i);
+			boolean hasNormalNode = false;
+			for (int j = 0; j < nodes.size(); j++) {
+				if (!nodes.get(j).isVirtual()) {
+					double nodeLeftX = nodes.get(j).getxCoordinate() - nodes.get(j).getLeftWidth();
+					minLeftX = Math.min(minLeftX, nodeLeftX);
+					hasNormalNode = true;
+				}
+			}
+			if (!hasNormalNode) {
+				continue;
+			}
+
+			for (int j = nodes.size() - 1; j >= 0; j--) {
+				if (!nodes.get(j).isVirtual()) {
+					double nodeRightX = nodes.get(j).getxCoordinate() + nodes.get(j).getRightWidth();
+					maxRightX = Math.max(maxRightX, nodeRightX);
+				}
+			}
+		}
+		
+		List<LayoutNode> nodes = this.getRankOrder(maxRank);
+		if(!nodes.isEmpty()) {
+			minLowerY = nodes.get(0).getyCoordinate() - nodes.get(0).getHeightBelowCenter();
+		}
+		
+		nodes = this.getRankOrder(0);
+		if(!nodes.isEmpty()) {
+			maxUpperY = nodes.get(0).getyCoordinate() + nodes.get(0).getHeightAboveCenter();
+		}
+
+		Point ll = new Point(minLeftX, minLowerY);
+		Point ur = new Point(maxRightX, maxUpperY);
+		return new Box(ll, ur);
 	}
 }

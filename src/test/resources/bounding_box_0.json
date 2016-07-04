@@ -1,0 +1,59 @@
+{
+"description" : "Partial graph layout with vertex positions and expected bounding box dimensions",
+
+"graph" : {
+	"nodes": [
+	{
+		"id" : "1",
+		"label" : "a",
+		"rank" : "0",
+		"width" : "18",
+		"height" : "18",
+		"pos"   : ["20", "130"]
+	},
+	{
+		"id" : "2",
+		"label" : "b",
+		"rank" : "1",
+		"width" : "18",
+		"height" : "18",
+		"pos" : ["10", "60"]
+	},
+	{
+		"id" : "3",
+		"label" : "c",
+		"rank" : "2",
+		"width" : "18",
+		"height" : "18",
+		"pos" : ["30", "20"]
+	}
+	],
+
+	"edges" : [
+	{
+		"id" : "4",
+		"label" : "ba",
+		"from" : "2",
+		"to" : "1"
+	},
+	{
+		"id" : "5",
+		"label" : "ca",
+		"from" : "3",
+		"to" : "1"
+	},
+	{
+		"id" : "6",
+		"label" : "cb",
+		"from" : "3",
+		"to" : "2"
+	}
+	]
+	},
+	
+"boundingBox" : {
+	"lowerLeft" : ["1", "11"],
+	"upperRight" : ["39", "139"]
+	}
+}
+

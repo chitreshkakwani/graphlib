@@ -19,7 +19,7 @@ public class EquationSolverTest {
 		Assertions.assertContains(roots, -1.051, 1E-3);
 	}
 
-	@Test
+	@Test(expected=NegligibleCoefficientsException.class)
 	public void testSolveLinearWithInvalidCoefficients() throws NegligibleCoefficientsException {
 		List<Double> roots = EquationSolver.solveLinear(1E-12, 1E-12);
 		assertTrue(roots == null);
